@@ -12,6 +12,7 @@ import me.dio.sacola.resource.dto.ItemDto;
 import me.dio.sacola.service.SacolaService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,10 +27,12 @@ public class SacolaServiceImpl implements SacolaService {
     public Item incluirItemNaSacola(ItemDto itemDto) {
         Sacola sacola = verSacola(itemDto.getIdSacola());
 
+        // Não pode inserir itens se a sacola estiver fechada
         if(sacola.isFechada()){
             throw new RuntimeException("Essa sacola está fechada!");
         }
 
+        // Cria um novo item
         Item itemParaSerInserido = Item.builder()
             .quantidade(itemDto.getQuantidade())
             .sacola(sacola)
@@ -42,11 +45,12 @@ public class SacolaServiceImpl implements SacolaService {
 
         List<Item> itensDaSacola = sacola.getItens();
 
+        // Adiciona o item na sacola, caso ela esteja vazia
         if(itensDaSacola.isEmpty()){
             itensDaSacola.add(itemParaSerInserido);
         }
 
-        // Verifica se o existem produtos de restaurantes diferentes para adicionar na sacola
+        // Impede de adicionar produtos de restaurantes diferentes na sacola
         else {
             Restaurante restauranteAtual = itensDaSacola.get(0).getProduto().getRestaurante();
             Restaurante restauranteNovo = itemParaSerInserido.getProduto().getRestaurante();
@@ -57,6 +61,16 @@ public class SacolaServiceImpl implements SacolaService {
                 throw new RuntimeException("Não é possível adicionar produtos de restaurantes diferentes!");
             }
         }
+
+        // Atualiza o valor total da sacola
+        List<Double> valorDosItens = new ArrayList<>();
+        for (Item itemSacola : itensDaSacola) {
+            Double valorTotalItem = itemSacola.getProduto().getValorUnitario() * itemSacola.getQuantidade();
+            valorDosItens.add(valorTotalItem);
+        }
+
+        Double valorTotalSacola = valorDosItens.stream().reduce(0.0, Double::sum);
+        sacola.setValorTotal(valorTotalSacola);
 
         sacolaRepository.save(sacola);
 
