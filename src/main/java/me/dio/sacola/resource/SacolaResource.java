@@ -21,6 +21,14 @@ public class SacolaResource {
         return sacolaService.incluirItemNaSacola(itemDto);
     }
 
+    @PatchMapping("/removerItem/{sacolaId}")
+    public Item removerItemDaSacola(
+            @PathVariable("sacolaId") Long sacolaId,
+            @RequestParam("itemId") Long itemId)
+    {
+        return sacolaService.removerItemDaSacola(sacolaId, itemId);
+    }
+
     @GetMapping("/{id}")
     public Sacola verSacola(@PathVariable("id") Long id){
         return sacolaService.verSacola(id);
